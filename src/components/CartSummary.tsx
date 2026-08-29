@@ -11,7 +11,7 @@ export default function CartSummary({ checkout = false }: CartSummaryProps) {
   const { cartSubtotal, deliveryFee, cartTotal } = useStore();
   return (
     <aside className="cart-summary">
-      <p className="eyebrow text-ink/50">SAIF / TOTAL</p>
+      <p className="eyebrow text-ink/50">الإجمالي / SAIF</p>
       <div className="mt-5 space-y-3 text-sm">
         <div className="flex justify-between text-ink/60"><span>إجمالي المنتجات</span><span>{formatEGP(cartSubtotal)}</span></div>
         <div className="flex justify-between text-ink/60"><span>مصاريف التوصيل</span><span>{formatEGP(deliveryFee)}</span></div>
