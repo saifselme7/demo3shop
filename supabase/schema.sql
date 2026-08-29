@@ -268,7 +268,8 @@ begin
   if v_phone !~ '^01[0125][0-9]{8}$' then raise exception 'رقم الموبايل غير صحيح'; end if;
   if v_transfer_phone !~ '^01[0125][0-9]{8}$' then raise exception 'رقم التحويل غير صحيح'; end if;
   if v_payment_method not in ('vodafone_cash', 'instapay') then raise exception 'طريقة الدفع غير صحيحة'; end if;
-  if v_proof_path is not null and v_proof_path not like 'pending/%' then raise exception 'إثبات الدفع غير صحيح'; end if;
+  if v_proof_path is null then raise exception 'إثبات الدفع مطلوب'; end if;
+  if v_proof_path not like 'pending/%' then raise exception 'إثبات الدفع غير صحيح'; end if;
   if jsonb_typeof(p_order -> 'items') <> 'array' or jsonb_array_length(p_order -> 'items') = 0 then raise exception 'السلة فاضية'; end if;
 
   for v_item in select * from jsonb_to_recordset(p_order -> 'items') as x(product_id uuid, quantity integer, size text, color text) loop

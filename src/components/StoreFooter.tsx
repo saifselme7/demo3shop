@@ -15,7 +15,7 @@ export default function StoreFooter() {
           <div>
             <LogoMark settings={settings} light />
             <p className="mt-6 max-w-sm text-sm leading-8 text-paper/55">{settings.storeDescription}</p>
-            <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold underline-offset-4 transition-opacity hover:opacity-65">كلمنا على واتساب <ArrowUpLeft size={16} /></a>
+            {whatsapp ? <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold underline-offset-4 transition-opacity hover:opacity-65">كلمنا على واتساب <ArrowUpLeft size={16} /></a> : null}
           </div>
           <div>
             <p className="eyebrow text-paper/40">تصفح</p>
@@ -37,7 +37,7 @@ export default function StoreFooter() {
             <div className="mt-5 flex gap-3">
               <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="footer-social"><Instagram size={17} /></a>
               <a href={settings.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="footer-social font-display text-xs">TK</a>
-              <a href={`tel:${settings.contactPhone}`} aria-label="اتصل بنا" className="footer-social font-display text-xs">TEL</a>
+              {settings.contactPhone ? <a href={`tel:${settings.contactPhone}`} aria-label="اتصل بنا" className="footer-social font-display text-xs"><span className="font-display text-xs">اتصل</span></a> : null}
             </div>
           </div>
         </div>

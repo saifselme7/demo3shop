@@ -1,10 +1,12 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Minus, Plus, Trash2, X } from 'lucide-react';
+import { useEffect } from 'react';
 import Link from './Link';
 import { formatEGP } from '../lib/format';
 import { cartLineLabel, cartLineTotal, useStore } from '../store/StoreProvider';
 
 export default function CartDrawer() {
+  const reducedMotion = useReducedMotion();
   const {
     cartItems,
     cartOpen,
@@ -15,6 +17,15 @@ export default function CartDrawer() {
     updateCartQuantity,
     removeFromCart,
   } = useStore();
+
+  useEffect(() => {
+    if (!cartOpen) return undefined;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setCartOpen(false); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', closeOnEscape); };
+  }, [cartOpen, setCartOpen]);
 
   return (
     <AnimatePresence>
@@ -33,13 +44,13 @@ export default function CartDrawer() {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 330, damping: 34 }}
+            transition={reducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 330, damping: 34 }}
             className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-[470px] flex-col bg-paper text-ink shadow-2xl"
             aria-label="السلة"
           >
             <div className="flex items-center justify-between border-b border-ink/10 px-5 py-5 sm:px-7">
               <div>
-                <p className="eyebrow text-ink/50">SAIF / BAG</p>
+                <p className="eyebrow text-ink/50">السلة / SAIF</p>
                 <h2 className="mt-1 text-xl font-bold">السلة <span className="text-ink/40">({cartItems.length})</span></h2>
               </div>
               <button type="button" onClick={() => setCartOpen(false)} aria-label="اقفل السلة" className="icon-button">

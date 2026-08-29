@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Menu, ShoppingBag, X } from 'lucide-react';
 import { useState } from 'react';
 import { categoryPath } from '../lib/format';
@@ -14,6 +14,7 @@ const NAV_LINKS = [
 
 export default function StoreHeader() {
   const { settings, categories, cartCount, setCartOpen } = useStore();
+  const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
 
   const close = () => setOpen(false);
@@ -74,7 +75,7 @@ export default function StoreHeader() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
+            transition={reducedMotion ? { duration: 0.01 } : { duration: 0.24, ease: 'easeOut' }}
             className="mx-auto mt-2 max-w-[1440px] rounded-[28px] border border-black/10 bg-paper p-3 text-ink shadow-editorial lg:hidden"
           >
             <nav className="flex flex-col" aria-label="قائمة الموبايل">

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { formatEGP, productDiscount, productPath } from '../lib/format';
@@ -14,6 +14,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0, feature = false }: ProductCardProps) {
   const { addToCart } = useStore();
+  const reducedMotion = useReducedMotion();
   const [added, setAdded] = useState(false);
   const discount = productDiscount(product);
   const secondaryImage = product.images[1] ?? product.images[0];
@@ -27,10 +28,10 @@ export default function ProductCard({ product, index = 0, feature = false }: Pro
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 26 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 26 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '60px' }}
-      transition={{ delay: Math.min(index * 0.045, 0.28), duration: 0.65, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ delay: reducedMotion ? 0 : Math.min(index * 0.045, 0.28), duration: reducedMotion ? 0.01 : 0.65, ease: [0.25, 0.1, 0.25, 1] }}
       className={`group relative ${feature ? 'md:col-span-2' : ''}`}
     >
       <div className={`product-image-wrap relative overflow-hidden bg-fog ${feature ? 'aspect-[1.18]' : 'aspect-[0.78]'}`}>
