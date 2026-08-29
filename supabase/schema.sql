@@ -270,6 +270,7 @@ begin
   if v_payment_method not in ('vodafone_cash', 'instapay') then raise exception 'طريقة الدفع غير صحيحة'; end if;
   if v_proof_path is null then raise exception 'إثبات الدفع مطلوب'; end if;
   if v_proof_path not like 'pending/%' then raise exception 'إثبات الدفع غير صحيح'; end if;
+  if not exists (select 1 from storage.objects where bucket_id = 'payment-proofs' and name = v_proof_path) then raise exception 'إثبات الدفع غير موجود'; end if;
   if jsonb_typeof(p_order -> 'items') <> 'array' or jsonb_array_length(p_order -> 'items') = 0 then raise exception 'السلة فاضية'; end if;
 
   for v_item in select * from jsonb_to_recordset(p_order -> 'items') as x(product_id uuid, quantity integer, size text, color text) loop

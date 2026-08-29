@@ -155,7 +155,7 @@ function toOrderStatus(value: unknown): OrderStatus {
     : 'pending';
 }
 
-function mapRemoteOrder(data: unknown, cartItems: CartItem[], settings: StoreSettings): OrderRecord {
+function mapRemoteOrder(data: unknown, cartItems: CartItem[], settings: StoreSettings, checkout?: CheckoutPayload): OrderRecord {
   const record = getResponseRecord(data);
   const fallbackItems = cartItems.map((item) => ({
     productId: item.product.id,
@@ -172,11 +172,11 @@ function mapRemoteOrder(data: unknown, cartItems: CartItem[], settings: StoreSet
   return {
     id: String(record.id ?? randomId()),
     orderNumber: String(record.order_number ?? makeOrderNumber()),
-    customerName: String(record.customer_name ?? ''),
-    phone: String(record.phone ?? ''),
-    email: record.email == null ? null : String(record.email),
-    address: String(record.address ?? ''),
-    notes: record.notes == null ? null : String(record.notes),
+    customerName: String(record.customer_name ?? checkout?.customerName ?? ''),
+    phone: String(record.phone ?? checkout?.phone ?? ''),
+    email: record.email == null ? checkout?.email ?? null : String(record.email),
+    address: String(record.address ?? checkout?.address ?? ''),
+    notes: record.notes == null ? checkout?.notes ?? null : String(record.notes),
     items: fallbackItems,
     subtotal,
     deliveryFee: delivery,
@@ -388,18 +388,13 @@ export function StoreProvider({ children }: PropsWithChildren) {
       let order: OrderRecord;
       const client = supabase;
       if (client && isSupabaseConfigured) {
-        if (payload.paymentProof) {
-          const body = new FormData();
-          body.append('order', JSON.stringify(orderPayload));
-          body.append('proof', payload.paymentProof);
-          const { data, error } = await client.functions.invoke('create-order', { body });
-          if (error) throw new Error('حصلت مشكلة وإحنا بنبعت إثبات التحويل. جرّب تاني.');
-          order = mapRemoteOrder(asRecord(data).order ?? data, cartItems, settings);
-        } else {
-          const { data, error } = await client.rpc('create_order', { p_order: orderPayload });
-          if (error) throw new Error(error.message || 'تعذر تأكيد الطلب.');
-          order = mapRemoteOrder(data, cartItems, settings);
-        }
+        if (!payload.paymentProof) throw new Error('إثبات الدفع مطلوب.');
+        const body = new FormData();
+        body.append('order', JSON.stringify(orderPayload));
+        body.append('proof', payload.paymentProof);
+        const { data, error } = await client.functions.invoke('create-order', { body });
+        if (error) throw new Error('حصلت مشكلة وإحنا بنبعت إثبات التحويل. جرّب تاني.');
+        order = mapRemoteOrder(asRecord(data).order ?? data, cartItems, settings, payload);
       } else {
         const subtotal = cartSubtotal;
         order = {
