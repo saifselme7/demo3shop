@@ -1,4 +1,4 @@
-import { motion, type HTMLMotionProps } from 'framer-motion';
+import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 interface ButtonProps extends HTMLMotionProps<'button'> {
@@ -8,9 +8,11 @@ interface ButtonProps extends HTMLMotionProps<'button'> {
 }
 
 export default function Button({ children, variant = 'dark', arrow = false, className = '', type = 'button', ...props }: ButtonProps) {
+  const reducedMotion = useReducedMotion();
+
   return (
     <motion.button
-      whileTap={{ scale: 0.97 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.97 }}
       type={type}
       className={`button-${variant} ${className}`}
       {...props}
