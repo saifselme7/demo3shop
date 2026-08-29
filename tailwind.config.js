@@ -4,11 +4,21 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Kanit', 'sans-serif'],
+        sans: ['Cairo', 'Arial', 'sans-serif'],
+        display: ['Kanit', 'Cairo', 'sans-serif'],
       },
       colors: {
-        ink: '#0C0C0C',
-        mist: '#D7E2EA',
+        ink: '#111111',
+        soft: '#1B1B1B',
+        paper: '#F2F0EB',
+        fog: '#D9D6D0',
+        line: '#C9C6C0',
+      },
+      letterSpacing: {
+        editorial: '0.18em',
+      },
+      boxShadow: {
+        editorial: '0 24px 70px rgba(17, 17, 17, 0.11)',
       },
     },
   },
