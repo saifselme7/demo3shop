@@ -230,8 +230,8 @@ create policy orders_admin_update on public.orders for update to authenticated u
 drop policy if exists order_items_admin_select on public.order_items;
 create policy order_items_admin_select on public.order_items for select to authenticated using (public.is_admin());
 
--- Anonymous checkout is only allowed through this RPC. Prices, delivery, stock,
--- variants, totals, and the payment method are all validated on the server.
+-- Live checkout reaches this RPC only through the server-side Edge Function.
+-- Prices, delivery, stock, variants, totals, and the payment method are all validated here.
 create or replace function public.create_order(p_order jsonb)
 returns table (
   id uuid,
@@ -263,6 +263,7 @@ declare
   v_product public.products%rowtype;
   v_item record;
 begin
+  if coalesce(auth.role(), '') <> 'service_role' then raise exception 'إنشاء الطلبات متاح من خادم المتجر فقط'; end if;
   if v_customer_name is null or char_length(v_customer_name) < 3 then raise exception 'الاسم مطلوب'; end if;
   if v_address is null or char_length(v_address) < 10 then raise exception 'العنوان مطلوب'; end if;
   if v_phone !~ '^01[0125][0-9]{8}$' then raise exception 'رقم الموبايل غير صحيح'; end if;
@@ -300,7 +301,8 @@ begin
 end;
 $$;
 
-grant execute on function public.create_order(jsonb) to anon, authenticated;
+revoke execute on function public.create_order(jsonb) from public, anon, authenticated;
+grant execute on function public.create_order(jsonb) to service_role;
 
 -- Public tracking asks for both pieces of customer-owned information; it never
 -- exposes addresses, transfer numbers, proof files, or another customer's order.
