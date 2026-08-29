@@ -18,8 +18,9 @@ export function navigate(to: string): void {
   window.history.pushState({}, '', `${target.pathname}${target.search}${target.hash}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
   window.setTimeout(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (target.hash) {
-      document.getElementById(target.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(target.hash.slice(1))?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     } else {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }

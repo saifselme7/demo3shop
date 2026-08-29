@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Menu, ShoppingBag, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { categoryPath } from '../lib/format';
 import Link from './Link';
 import LogoMark from './LogoMark';
@@ -16,6 +16,20 @@ export default function StoreHeader() {
   const { settings, categories, cartCount, setCartOpen } = useStore();
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
 
   const close = () => setOpen(false);
 
@@ -49,7 +63,7 @@ export default function StoreHeader() {
             {cartCount > 0 ? (
               <motion.span
                 key={cartCount}
-                initial={{ scale: 0.5, opacity: 0 }}
+                initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1 text-[0.65rem] font-bold text-paper"
               >
