@@ -271,8 +271,8 @@ begin
   if v_phone !~ '^01[0125][0-9]{8}$' then raise exception 'رقم الموبايل غير صحيح'; end if;
   if v_transfer_phone !~ '^01[0125][0-9]{8}$' then raise exception 'رقم التحويل غير صحيح'; end if;
   if v_payment_method not in ('vodafone_cash', 'instapay') then raise exception 'طريقة الدفع غير صحيحة'; end if;
-  select case when v_payment_method = 'vodafone_cash' then nullif(trim(vodafone_cash_number), '') else nullif(trim(instapay_number), '') end
-    into v_payment_destination from public.store_settings where id = 'store';
+  select case when v_payment_method = 'vodafone_cash' then nullif(trim(store_settings.vodafone_cash_number), '') else nullif(trim(store_settings.instapay_number), '') end
+    into v_payment_destination from public.store_settings where store_settings.id = 'store';
   if v_payment_destination is null then raise exception 'طريقة الدفع دي مش متاحة دلوقتي'; end if;
   if v_proof_path is null then raise exception 'إثبات الدفع مطلوب'; end if;
   if v_proof_path not like 'pending/%' then raise exception 'إثبات الدفع غير صحيح'; end if;
@@ -292,7 +292,7 @@ begin
     update public.products set stock = stock - v_item.quantity where products.id = v_product.id;
   end loop;
 
-  select coalesce(delivery_fee, 0) into v_delivery_fee from public.store_settings where store_settings.id = 'store';
+  select coalesce(store_settings.delivery_fee, 0) into v_delivery_fee from public.store_settings where store_settings.id = 'store';
   insert into public.orders (order_number, customer_name, phone, email, address, notes, subtotal, delivery_fee, total, payment_method, transfer_phone, payment_proof_path)
   values ('', v_customer_name, v_phone, v_email, v_address, v_notes, v_subtotal, v_delivery_fee, v_subtotal + v_delivery_fee, v_payment_method, v_transfer_phone, v_proof_path)
   returning * into v_order;

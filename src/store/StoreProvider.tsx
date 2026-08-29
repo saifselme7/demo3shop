@@ -164,9 +164,16 @@ function asErrorRecord(value: unknown): Record<string, unknown> | null {
 function messageFromBody(body: unknown): string | null {
   const record = asErrorRecord(body);
   if (!record) return null;
-  for (const key of ['error', 'message', 'msg', 'detail']) {
+  for (const key of ['error', 'message', 'msg', 'detail', 'details']) {
     const value = record[key];
     if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  // Include code if present for debugging
+  if (record.code && typeof record.code === 'string') {
+    const err = record.error || record.message;
+    if (typeof err === 'string' && err.trim()) {
+      return `${err} [${record.code}]`;
+    }
   }
   if (Array.isArray(record.details)) {
     for (const detail of record.details) {
@@ -191,28 +198,57 @@ function statusErrorMessage(status: number | undefined): string | null {
 
 /**
  * Extracts the real reason from a create-order failure. The function answers
- * { error: '<reason>' } on failure; Supabase may also return { message/msg } for
+ * { error: '<reason>', code, details } on failure; Supabase may also return { message/msg } for
  * relay/not-found/authentication responses. Returns null only when there is no
  * response or body that can be read, so the caller can keep one safe fallback.
+ * Also logs detailed diagnostics to console for development.
  */
 export async function readFunctionErrorMessage(response: Response | undefined, data: unknown): Promise<string | null> {
   const fromData = messageFromBody(data);
-  if (fromData) return fromData;
+  const status = response?.status;
+  const statusText = response?.statusText;
+
+  // Always log detailed diagnostics for development
+  if (typeof window !== 'undefined') {
+    console.error('create-order diagnostics', {
+      status,
+      statusText,
+      data,
+      url: response?.url,
+      headers: response ? Object.fromEntries(response.headers.entries()) : null,
+    });
+  }
+
+  if (fromData) {
+    // If we have a detailed message, include status for context when >=400
+    if (status && status >= 400 && !fromData.includes(String(status))) {
+      return `${fromData} (HTTP ${status})`;
+    }
+    return fromData;
+  }
   if (!response) return null;
 
-  const status = response.status;
   try {
     const clone = response.clone();
     let parsed: unknown;
     try {
       parsed = await clone.json();
     } catch {
-      const text = (await clone.text() || '').trim().slice(0, 300);
-      if (text && !text.startsWith('<')) return text;
+      const text = (await clone.text() || '').trim().slice(0, 500);
+      if (text && !text.startsWith('<')) {
+        console.error('create-order raw text error', { status, text });
+        return text;
+      }
       return statusErrorMessage(status);
     }
-    return messageFromBody(parsed) ?? statusErrorMessage(status);
-  } catch {
+    const parsedMessage = messageFromBody(parsed);
+    if (parsedMessage) {
+      console.error('create-order parsed error', { status, parsed });
+      return status && status >= 400 ? `${parsedMessage} (HTTP ${status})` : parsedMessage;
+    }
+    return statusErrorMessage(status);
+  } catch (e) {
+    console.error('create-order readFunctionErrorMessage failed', e);
     return statusErrorMessage(status);
   }
 }
@@ -462,16 +498,29 @@ export function StoreProvider({ children }: PropsWithChildren) {
       const client = supabase;
       if (client && isSupabaseConfigured) {
         if (!payload.paymentProof) throw new Error('إثبات الدفع مطلوب.');
+        // Log proof details for debugging MIME/size issues
+        console.log('placeOrder: proof details', {
+          name: payload.paymentProof.name,
+          type: payload.paymentProof.type,
+          size: payload.paymentProof.size,
+        });
         const body = new FormData();
         body.append('order', JSON.stringify(orderPayload));
         body.append('proof', payload.paymentProof);
         const { data, error, response } = await client.functions.invoke('create-order', { body });
         if (error || data == null || typeof data !== 'object' || !('order' in (data as Record<string, unknown>))) {
-          // The function answers { order } on success and { error: '<reason>' } on
+          // The function answers { order } on success and { error: '<reason>', code, details } on
           // failure. Surface the real reason — a controlled, customer-safe message
           // (Arabic RPC validation messages / function configuration messages) — so
-          // the exact failing step is visible in the checkout UI.
+          // the exact failing step is visible in the checkout UI and in console.
           const serverMessage = await readFunctionErrorMessage(response, data);
+          console.error('placeOrder: create-order failed', {
+            error,
+            data,
+            status: response?.status,
+            statusText: response?.statusText,
+            proof: { name: payload.paymentProof.name, type: payload.paymentProof.type, size: payload.paymentProof.size },
+          });
           throw new Error(serverMessage ?? 'حصلت مشكلة وإحنا بنبعت إثبات التحويل. جرّب تاني.');
         }
         order = mapRemoteOrder(asRecord(data).order ?? data, cartItems, settings, payload);

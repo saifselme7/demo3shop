@@ -19,11 +19,37 @@ interface FormErrors {
   proof?: string;
 }
 
-const PROOF_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/pjpeg']);
+const PROOF_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/pjpeg',
+  'image/jpe',
+  'image/jfif',
+  'image/png',
+  'image/x-png',
+  'image/webp',
+  'image/x-webp',
+]);
 const MAX_PROOF_SIZE = 5 * 1024 * 1024;
 
+function normalizeProofMime(file: File): string {
+  let mime = (file.type || '').toLowerCase().trim();
+  if (mime.includes(';')) mime = mime.split(';')[0].trim();
+  if (!mime) {
+    const name = (file.name || '').toLowerCase();
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.webp')) return 'image/webp';
+    if (name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.jpe') || name.endsWith('.jfif')) {
+      return 'image/jpeg';
+    }
+    return '';
+  }
+  return mime;
+}
+
 function isValidProof(file: File): boolean {
-  return PROOF_MIME_TYPES.has(file.type.toLowerCase()) && file.size <= MAX_PROOF_SIZE;
+  const mime = normalizeProofMime(file);
+  return PROOF_MIME_TYPES.has(mime) && file.size > 0 && file.size <= MAX_PROOF_SIZE;
 }
 
 export default function CheckoutPage() {
@@ -79,6 +105,12 @@ export default function CheckoutPage() {
       const order = await placeOrder({ customerName, phone, email, address, notes, paymentMethod, transferPhone, paymentProof: proof });
       navigate(`/success/${order.orderNumber}`);
     } catch (error) {
+      // Surface the real technical reason in console for debugging, keep UI Arabic
+      console.error('checkout submit failed', {
+        error,
+        message: error instanceof Error ? error.message : String(error),
+        proof: proof ? { name: proof.name, type: proof.type, size: proof.size } : null,
+      });
       setSubmitError(error instanceof Error ? error.message : 'حصلت مشكلة. جرّب تاني.');
     } finally {
       setSubmitting(false);
@@ -92,7 +124,7 @@ export default function CheckoutPage() {
         <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_360px] lg:gap-20">
           <FadeIn delay={0.1} y={24}><form onSubmit={handleSubmit} className="space-y-10" noValidate>
             <section><div className="mb-6 flex items-center gap-3"><span className="step-number">01</span><div><h2 className="text-xl font-bold">بيانات التوصيل</h2><p className="mt-1 text-xs text-ink/45">هنستخدمها عشان نوصل لك من غير لف.</p></div></div><div className="grid gap-5 sm:grid-cols-2"><Field id="customer-name" label="الاسم" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="اكتب اسمك" autoComplete="name" error={errors.customerName} /><Field id="phone" label="رقم الموبايل" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="01xxxxxxxxx" inputMode="tel" autoComplete="tel" error={errors.phone} /><Field id="email" label="الإيميل (اختياري)" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@email.com" autoComplete="email" /><div className="sm:col-span-2"><TextareaField id="address" label="العنوان بالتفصيل" value={address} onChange={(event) => setAddress(event.target.value)} placeholder="المحافظة، المنطقة، الشارع، رقم العمارة والشقة" error={errors.address} autoComplete="street-address" /></div><div className="sm:col-span-2"><TextareaField id="notes" label="ملاحظات (اختياري)" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="أي حاجة تحب تقولها للمندوب؟" /></div></div></section>
-            <section className="border-t border-ink/12 pt-10"><div className="mb-6 flex items-center gap-3"><span className="step-number">02</span><div><h2 className="text-xl font-bold">طريقة الدفع</h2><p className="mt-1 text-xs text-ink/45">حوّل قيمة الطلب وبعتلنا الإثبات.</p></div></div><div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setPaymentMethod('vodafone_cash')} className={`payment-choice ${paymentMethod === 'vodafone_cash' ? 'payment-choice-selected' : ''}`}><span className="payment-icon">VF</span><span className="flex-1 text-right"><strong className="block text-sm">Vodafone Cash</strong><small className="mt-1 block text-xs text-ink/45">تحويل من المحفظة</small></span>{paymentMethod === 'vodafone_cash' ? <Check size={17} /> : null}</button><button type="button" onClick={() => setPaymentMethod('instapay')} className={`payment-choice ${paymentMethod === 'instapay' ? 'payment-choice-selected' : ''}`}><span className="payment-icon font-display text-xs">IP</span><span className="flex-1 text-right"><strong className="block text-sm">InstaPay</strong><small className="mt-1 block text-xs text-ink/45">تحويل لحظي</small></span>{paymentMethod === 'instapay' ? <Check size={17} /> : null}</button></div><div className="payment-instructions mt-5"><div className="flex items-start gap-3"><Smartphone size={19} className="mt-1 shrink-0" /><div><p className="text-sm font-bold">حوّل {formatEGP(cartTotal)} على الرقم ده</p><p className="mt-2 break-all font-display text-xl tracking-[0.04em]">{paymentNumber || 'الرقم هيتضاف قريباً'}</p><p className="mt-2 text-xs leading-6 text-ink/55">بعد التحويل، اكتب الرقم اللي حولت منه وارفع صورة واضحة للإيصال.</p></div></div></div><div className="mt-5 grid gap-5 sm:grid-cols-2"><Field id="transfer-phone" label="رقم الموبايل اللي حولت منه" value={transferPhone} onChange={(event) => setTransferPhone(event.target.value)} placeholder="01xxxxxxxxx" inputMode="tel" error={errors.transferPhone} /><label htmlFor="payment-proof" className="field-wrap"><span className="field-label">صورة التحويل</span><span className={`upload-control ${errors.proof ? 'border-red-700' : ''}`}><UploadCloud size={18} /><span className="min-w-0 flex-1 truncate">{proof ? proof.name : 'اختار صورة الإيصال'}</span><input id="payment-proof" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => handleFile(event.target.files?.[0])} className="sr-only" /></span>{proof ? <span className="field-hint flex items-center gap-1"><FileImage size={12} /> الصورة جاهزة للمراجعة</span> : <span className="field-hint">PNG أو JPG أو WEBP · لحد ٥ ميجا</span>}{errors.proof ? <span className="field-error">{errors.proof}</span> : null}</label></div></section>
+            <section className="border-t border-ink/12 pt-10"><div className="mb-6 flex items-center gap-3"><span className="step-number">02</span><div><h2 className="text-xl font-bold">طريقة الدفع</h2><p className="mt-1 text-xs text-ink/45">حوّل قيمة الطلب وبعتلنا الإثبات.</p></div></div><div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setPaymentMethod('vodafone_cash')} className={`payment-choice ${paymentMethod === 'vodafone_cash' ? 'payment-choice-selected' : ''}`}><span className="payment-icon">VF</span><span className="flex-1 text-right"><strong className="block text-sm">Vodafone Cash</strong><small className="mt-1 block text-xs text-ink/45">تحويل من المحفظة</small></span>{paymentMethod === 'vodafone_cash' ? <Check size={17} /> : null}</button><button type="button" onClick={() => setPaymentMethod('instapay')} className={`payment-choice ${paymentMethod === 'instapay' ? 'payment-choice-selected' : ''}`}><span className="payment-icon font-display text-xs">IP</span><span className="flex-1 text-right"><strong className="block text-sm">InstaPay</strong><small className="mt-1 block text-xs text-ink/45">تحويل لحظي</small></span>{paymentMethod === 'instapay' ? <Check size={17} /> : null}</button></div><div className="payment-instructions mt-5"><div className="flex items-start gap-3"><Smartphone size={19} className="mt-1 shrink-0" /><div><p className="text-sm font-bold">حوّل {formatEGP(cartTotal)} على الرقم ده</p><p className="mt-2 break-all font-display text-xl tracking-[0.04em]">{paymentNumber || 'الرقم هيتضاف قريباً'}</p><p className="mt-2 text-xs leading-6 text-ink/55">بعد التحويل، اكتب الرقم اللي حولت منه وارفع صورة واضحة للإيصال.</p></div></div></div><div className="mt-5 grid gap-5 sm:grid-cols-2"><Field id="transfer-phone" label="رقم الموبايل اللي حولت منه" value={transferPhone} onChange={(event) => setTransferPhone(event.target.value)} placeholder="01xxxxxxxxx" inputMode="tel" error={errors.transferPhone} /><label htmlFor="payment-proof" className="field-wrap"><span className="field-label">صورة التحويل</span><span className={`upload-control ${errors.proof ? 'border-red-700' : ''}`}><UploadCloud size={18} /><span className="min-w-0 flex-1 truncate">{proof ? proof.name : 'اختار صورة الإيصال'}</span><input id="payment-proof" type="file" accept="image/png,image/jpeg,image/jpg,image/pjpeg,image/webp,.png,.jpg,.jpeg,.webp" onChange={(event) => handleFile(event.target.files?.[0])} className="sr-only" /></span>{proof ? <span className="field-hint flex items-center gap-1"><FileImage size={12} /> الصورة جاهزة للمراجعة</span> : <span className="field-hint">PNG أو JPG أو WEBP · لحد ٥ ميجا</span>}{errors.proof ? <span className="field-error">{errors.proof}</span> : null}</label></div></section>
             {submitError ? <div className="rounded-2xl border border-red-800/20 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800" role="alert">{submitError}</div> : null}
             {!isLive ? <div className="rounded-2xl border border-ink/10 bg-fog/45 px-4 py-3 text-xs leading-6 text-ink/55"><LockKeyhole size={14} className="ml-1 inline" /> وضع المعاينة شغال: الطلب هيتحفظ على الجهاز ده. عند ربط Supabase، الإثبات هيروح لتخزين خاص.</div> : null}
             {isLive && !paymentReady ? <div className="rounded-2xl border border-red-800/20 bg-red-50 px-4 py-3 text-xs font-semibold leading-6 text-red-800" role="alert">رقم التحويل مش متظبط لسه. صاحب المتجر يقدر يضيفه من إعدادات لوحة التحكم.</div> : null}
