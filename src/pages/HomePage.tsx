@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowLeft, ArrowUpLeft, MoveUpLeft } from 'lucide-react';
-import AboutShaderBackground from '../components/AboutShaderBackground';
+import { lazy, Suspense } from 'react';
 import FadeIn from '../components/FadeIn';
 import Link from '../components/Link';
 import ParticleField from '../components/ParticleField';
@@ -8,6 +8,7 @@ import SectionLabel from '../components/SectionLabel';
 import { categoryPath, formatEGP } from '../lib/format';
 import { useStore } from '../store/StoreProvider';
 
+const AboutShaderBackground = lazy(() => import('../components/AboutShaderBackground'));
 const fallbackHeroImage = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=88';
 
 export default function HomePage() {
@@ -125,7 +126,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-paper px-5 pb-24 sm:px-8 sm:pb-32 lg:px-12">
         <div className="mx-auto grid max-w-[1440px] items-stretch gap-0 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="relative min-h-[480px] overflow-hidden bg-ink text-paper sm:min-h-[600px]">
-            <AboutShaderBackground />
+            <Suspense fallback={null}><AboutShaderBackground /></Suspense>
             <div className="relative z-10 flex h-full min-h-[480px] flex-col justify-between p-7 sm:min-h-[600px] sm:p-12"><SectionLabel index="04" light>من الاستوديو</SectionLabel><div><p className="font-display text-[clamp(4rem,10vw,9rem)] font-bold leading-[0.8] tracking-[-0.06em]">FORM<br /><span className="text-paper/30">/ 026</span></p><p className="mt-8 max-w-sm text-sm leading-7 text-paper/60">القطعة الحلوة مش محتاجة شعار كبير. محتاجة خامة تعيش، وقصّة تفضل مظبوطة.</p></div><Link to="/products" className="inline-flex w-fit items-center gap-3 text-sm font-bold text-paper underline decoration-paper/30 underline-offset-8">شوف القطع الجديدة <ArrowLeft size={16} /></Link></div>
           </div>
           <div className="flex flex-col justify-between bg-fog p-7 text-ink sm:p-12"><div><p className="eyebrow text-ink/45">DROP NOTES / 01</p><h2 className="mt-8 max-w-sm text-4xl font-bold leading-tight tracking-tight sm:text-5xl">الهدوء<br /><span className="text-ink/35">له شكل.</span></h2></div><div className="mt-16"><p className="max-w-sm text-sm leading-8 text-ink/60">ألوان قليلة. تفاصيل أكتر. اختار اللي شبهك وسيب الباقي علينا.</p><Link to="/category/tshirts" className="mt-8 inline-flex items-center gap-2 text-sm font-bold underline decoration-ink/25 underline-offset-8">ابدأ بالأساسيات <MoveUpLeft size={16} /></Link></div></div>

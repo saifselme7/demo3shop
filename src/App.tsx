@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CustomCursor from './components/CustomCursor';
 import PageTransition from './components/PageTransition';
@@ -7,7 +7,6 @@ import Preloader from './components/Preloader';
 import StoreFooter from './components/StoreFooter';
 import StoreHeader from './components/StoreHeader';
 import Toast from './components/Toast';
-import AdminApp from './admin/AdminApp';
 import CartPage from './pages/CartPage';
 import CatalogPage from './pages/CatalogPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -18,6 +17,8 @@ import { useLocation, type AppLocation } from './lib/navigation';
 import { StoreProvider, useStore } from './store/StoreProvider';
 import Link from './components/Link';
 import { ArrowLeft } from 'lucide-react';
+
+const AdminApp = lazy(() => import('./admin/AdminApp'));
 
 export default function App() {
   return <StoreProvider><StoreRouter /></StoreProvider>;
@@ -34,7 +35,7 @@ function StoreRouter() {
     else document.title = 'SAIF STORE — لبس على مزاجك';
   }, [location.pathname]);
 
-  if (isAdmin) return <AdminApp />;
+  if (isAdmin) return <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}><AdminApp /></Suspense>;
 
   return <div className="store-app" dir="rtl"><Preloader ready={!loading} /><CustomCursor /><StoreHeader /><AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence><StoreFooter /><CartDrawer /><Toast /></div>;
 }
