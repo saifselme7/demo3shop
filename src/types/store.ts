@@ -63,8 +63,10 @@ export interface CartItem {
   color?: string;
 }
 
+/** Wire shape for `create_order` RPC items — keys must match the RPC's
+ *  jsonb_to_recordset column names exactly (product_id, not productId). */
 export interface OrderItemInput {
-  productId: string;
+  product_id: string;
   quantity: number;
   size?: string;
   color?: string;

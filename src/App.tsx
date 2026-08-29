@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CustomCursor from './components/CustomCursor';
 import PageTransition from './components/PageTransition';
@@ -29,6 +29,13 @@ function StoreRouter() {
   const { loading, catalogError, isLive, refreshCatalog } = useStore();
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   const wasAdmin = useRef(false);
+  // While the preloader covers the page, IntersectionObserver still reports
+  // in-viewport elements as in-view, so every above-the-fold reveal would
+  // finish playing behind the opaque loader and the page would look static.
+  // Route content therefore mounts only when the preloader starts its exit
+  // hand-off (onRevealStart): the opening sections then reveal visibly and
+  // lower sections keep revealing on scroll, exactly as before.
+  const [revealsReady, setRevealsReady] = useState(false);
 
   useEffect(() => {
     if (wasAdmin.current && !isAdmin && isLive) void refreshCatalog();
@@ -43,7 +50,7 @@ function StoreRouter() {
 
   if (isAdmin) return <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}><AdminApp /></Suspense>;
 
-  return <div className="store-app" dir="rtl"><Preloader ready={!loading} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}<AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence><StoreFooter /><CartDrawer /><Toast /></div>;
+  return <div className="store-app" dir="rtl"><Preloader ready={!loading} onRevealStart={() => setRevealsReady(true)} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}{revealsReady ? <AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence> : <div className="min-h-screen bg-ink" aria-hidden="true" />}<StoreFooter /><CartDrawer /><Toast /></div>;
 }
 
 function PublicRoute({ location }: { location: AppLocation }) {

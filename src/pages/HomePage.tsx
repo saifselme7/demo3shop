@@ -50,7 +50,7 @@ export default function HomePage() {
 
           <FadeIn delay={0.2} x={-32} y={0} duration={1} className="relative order-1 lg:order-2">
             <div className="hero-image-frame relative mx-auto aspect-[0.77] max-w-[530px] overflow-hidden bg-soft lg:mr-0">
-              <SafeImage src={heroProduct?.images[0]} fallbackSrc={fallbackHeroImage} alt="تشكيلة SAIF STORE" className="h-full w-full object-cover grayscale-[0.75] transition-transform duration-1000 hover:scale-[1.025]" />
+              <SafeImage src={heroProduct?.images[0]} fallbackSrc={fallbackHeroImage} alt="تشكيلة SAIF STORE" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-[1.025]" />
               <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" aria-hidden="true" />
               <div className="absolute bottom-0 inset-x-0 flex items-end justify-between p-5 sm:p-7">
                 <div>
@@ -105,7 +105,7 @@ export default function HomePage() {
               <FadeIn key={category.id} delay={index * 0.05} y={24}>
                 <Link to={categoryPath(category.slug)} className={`category-tile group relative block overflow-hidden bg-soft ${index === 0 ? 'sm:row-span-2 sm:aspect-auto lg:row-span-2' : ''}`}>
                   <div className="aspect-[1.18] sm:aspect-[1.35]">
-                    <SafeImage src={category.imageUrl} alt={category.name} loading="lazy" className="h-full w-full object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0" />
+                    <SafeImage src={category.imageUrl} alt={category.name} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-transparent to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5 sm:p-6"><div><p className="eyebrow text-paper/50">0{index + 1}</p><h3 className="mt-1 text-xl font-bold text-paper">{category.name}</h3></div><span className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/40 text-paper transition-transform duration-300 group-hover:-translate-x-1"><ArrowUpLeft size={15} /></span></div>

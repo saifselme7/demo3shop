@@ -14,6 +14,18 @@ The storefront runs with a curated local preview catalog when Supabase variables
    where id = 'THE_AUTH_USER_UUID';
    ```
 
+   `/admin` requires a `public.profiles` row where `id` = the Auth user's
+   `auth.users.id` (looked up by `auth.uid()`, never by email) **and**
+   `role = 'admin'`. If the owner account was created manually in the
+   Dashboard before the `on_auth_user_created` trigger was installed, the
+   row may be missing entirely and the update above changes 0 rows — in that
+   case login is blocked with "الحساب ده مش مسموح له يدخل لوحة التحكم".
+   Use the idempotent helper (replace `OWNER_EMAIL` with the owner's email):
+
+   ```bash
+   -- run supabase/ensure-admin-profile.sql in the SQL editor
+   ```
+
 6. Deploy the proof-upload function from the repository root. It uses only the publishable key and the RLS policies in the schema:
 
    ```bash

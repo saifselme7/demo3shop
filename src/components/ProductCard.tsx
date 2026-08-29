@@ -37,8 +37,8 @@ export default function ProductCard({ product, index = 0, feature = false }: Pro
     >
       <div className={`product-image-wrap relative overflow-hidden bg-fog ${feature ? 'aspect-[1.18]' : 'aspect-[0.78]'}`}>
         <Link to={productPath(product)} className="absolute inset-0 z-0 block" aria-label={`شوف ${product.name}`}>
-          <SafeImage src={product.images[0]} alt={product.name} loading={index < 4 ? 'eager' : 'lazy'} className="product-image absolute inset-0 h-full w-full object-cover grayscale transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.035] group-hover:grayscale-0" />
-          {secondaryImage ? <SafeImage src={secondaryImage} alt="" loading="lazy" className="product-image absolute inset-0 h-full w-full object-cover opacity-0 transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-100 group-hover:grayscale-0" /> : null}
+          <SafeImage src={product.images[0]} alt={product.name} loading={index < 4 ? 'eager' : 'lazy'} className="product-image absolute inset-0 h-full w-full object-cover transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.035]" />
+          {secondaryImage ? <SafeImage src={secondaryImage} alt="" loading="lazy" className="product-image absolute inset-0 h-full w-full object-cover opacity-0 transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-100" /> : null}
         </Link>
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-3 sm:p-4">
           <div className="flex flex-wrap gap-2">
