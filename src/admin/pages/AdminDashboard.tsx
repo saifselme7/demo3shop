@@ -1,0 +1,62 @@
+import { ArrowLeft, Boxes, ClipboardList, CreditCard, Tags, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import FadeIn from '../../components/FadeIn';
+import Link from '../../components/Link';
+import { OrderStatusPill, PaymentStatusPill } from '../../components/OrderStatusPill';
+import { formatEGP } from '../../lib/format';
+import { supabase } from '../../lib/supabase';
+import type { OrderStatus, PaymentStatus } from '../../types/store';
+
+interface RecentOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  total: number;
+  payment_status: PaymentStatus;
+  order_status: OrderStatus;
+  created_at: string;
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, pendingPayments: 0 });
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = async () => {
+    const client = supabase;
+    if (!client) return;
+    setLoading(true);
+    setError('');
+    const [products, categories, orders, pending, recent] = await Promise.all([
+      client.from('products').select('*', { count: 'exact', head: true }),
+      client.from('categories').select('*', { count: 'exact', head: true }),
+      client.from('orders').select('*', { count: 'exact', head: true }),
+      client.from('orders').select('*', { count: 'exact', head: true }).eq('payment_status', 'pending'),
+      client.from('orders').select('id, order_number, customer_name, total, payment_status, order_status, created_at').order('created_at', { ascending: false }).limit(5),
+    ]);
+    const failed = [products, categories, orders, pending, recent].find((result) => result.error);
+    if (failed?.error) {
+      setError('تعذر تحميل أرقام لوحة التحكم. جرّب تحديث الصفحة.');
+      setLoading(false);
+      return;
+    }
+    setStats({ products: products.count ?? 0, categories: categories.count ?? 0, orders: orders.count ?? 0, pendingPayments: pending.count ?? 0 });
+    setRecentOrders((recent.data ?? []) as RecentOrder[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { void load(); }, []);
+
+  const statCards = [
+    { label: 'كل المنتجات', value: stats.products, icon: Boxes, to: '/admin/products' },
+    { label: 'التصنيفات', value: stats.categories, icon: Tags, to: '/admin/categories' },
+    { label: 'كل الطلبات', value: stats.orders, icon: ClipboardList, to: '/admin/orders' },
+    { label: 'تحويلات مستنية', value: stats.pendingPayments, icon: CreditCard, to: '/admin/orders' },
+  ];
+
+  return <div><FadeIn><div className="admin-heading"><div><p className="eyebrow text-ink/40">السبت / ٢٩ أغسطس ٢٠٢٦</p><h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">صباح الخير.</h1><p className="mt-2 text-sm text-ink/50">دي صورة سريعة عن اللي بيحصل في SAIF STORE.</p></div><div className="admin-heading-mark"><TrendingUp size={21} /><span>المتجر شغال</span></div></div></FadeIn>{error ? <div className="admin-alert admin-alert-error mt-6" role="alert">{error}<button type="button" onClick={() => void load()} className="mr-auto font-bold underline underline-offset-4">حاول تاني</button></div> : null}<div className="mt-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{statCards.map(({ label, value, icon: Icon, to }, index) => <FadeIn key={label} delay={index * 0.05} y={20}><Link to={to} className="admin-stat-card group"><span className="admin-stat-icon"><Icon size={18} /></span><span className="mt-8 block font-display text-4xl font-bold">{loading ? '—' : value}</span><span className="mt-2 block text-sm font-semibold text-ink/50">{label}</span><ArrowLeft size={15} className="absolute bottom-6 left-6 text-ink/25 transition-transform group-hover:-translate-x-1" /></Link></FadeIn>)}</div><div className="mt-12 grid gap-8 xl:grid-cols-[1.25fr_0.75fr]"><FadeIn y={22} className="admin-panel"><div className="flex items-center justify-between gap-4"><div><p className="eyebrow text-ink/40">آخر الحركة</p><h2 className="mt-2 text-xl font-bold">أحدث الطلبات</h2></div><Link to="/admin/orders" className="text-sm font-bold text-ink/50 hover:text-ink">كل الطلبات ←</Link></div>{recentOrders.length ? <div className="mt-7 overflow-x-auto"><table className="admin-table"><thead><tr><th>الطلب</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead><tbody>{recentOrders.map((order) => <tr key={order.id}><td className="font-display font-bold tracking-[0.05em]">{order.order_number}</td><td>{order.customer_name}</td><td>{formatEGP(order.total)}</td><td><div className="flex flex-wrap gap-1"><PaymentStatusPill status={order.payment_status} /><OrderStatusPill status={order.order_status} /></div></td></tr>)}</tbody></table></div> : <div className="empty-admin mt-7">{loading ? 'بنحمّل أحدث الطلبات...' : 'لسه مفيش طلبات. أول طلب هيظهر هنا.'}</div>}</FadeIn><FadeIn delay={0.12} y={22} className="admin-panel"><p className="eyebrow text-ink/40">اختصارات</p><h2 className="mt-2 text-xl font-bold">خلّصها بسرعة</h2><div className="mt-7 space-y-2"><QuickLink to="/admin/products" icon={<Boxes size={17} />} text="ضيف منتج جديد" /><QuickLink to="/admin/orders" icon={<CreditCard size={17} />} text="راجع التحويلات" /><QuickLink to="/admin/settings" icon={<TrendingUp size={17} />} text="عدّل بيانات المتجر" /></div><div className="mt-8 border-t border-ink/10 pt-6 text-xs leading-6 text-ink/45">الأرقام دي بتتحدث من Supabase مباشرة، وحالات الدفع والطلب منفصلين عشان الصورة تفضل واضحة.</div></FadeIn></div></div>;
+}
+
+function QuickLink({ to, icon, text }: { to: string; icon: ReactNode; text: string }) { return <Link to={to} className="flex items-center justify-between rounded-2xl border border-ink/10 px-4 py-3.5 text-sm font-bold transition-colors hover:bg-ink hover:text-paper"><span className="flex items-center gap-3">{icon}{text}</span><ArrowLeft size={15} /></Link>; }
