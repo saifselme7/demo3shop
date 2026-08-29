@@ -86,9 +86,9 @@ export default function StoreHeader() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            initial={{ opacity: 0, y: -12 }}
+            initial={reducedMotion ? false : { opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
+            exit={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
             transition={reducedMotion ? { duration: 0.01 } : { duration: 0.24, ease: 'easeOut' }}
             className="mx-auto mt-2 max-w-[1440px] rounded-[28px] border border-black/10 bg-paper p-3 text-ink shadow-editorial lg:hidden"
           >

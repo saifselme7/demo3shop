@@ -34,17 +34,18 @@ export default function CartDrawer() {
           <motion.button
             type="button"
             aria-label="اقفل السلة"
-            initial={{ opacity: 0 }}
+            initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.2 }}
             onClick={() => setCartOpen(false)}
             className="fixed inset-0 z-[70] bg-ink/45 backdrop-blur-[2px]"
           />
           <motion.aside
-            initial={{ x: '100%' }}
+            initial={reducedMotion ? false : { x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={reducedMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 330, damping: 34 }}
+            exit={reducedMotion ? { x: 0 } : { x: '100%' }}
+            transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 330, damping: 34 }}
             className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-[470px] flex-col bg-paper text-ink shadow-2xl"
             aria-label="السلة"
           >

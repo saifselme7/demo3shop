@@ -49,9 +49,9 @@ export default function ProductCard({ product, index = 0, feature = false }: Pro
         <button type="button" onClick={handleAdd} disabled={product.stock <= 0} className={`product-add absolute bottom-3 left-3 z-10 flex h-11 items-center gap-2 overflow-hidden rounded-full px-3 text-sm font-bold transition-[width,background,color] duration-300 sm:bottom-4 sm:left-4 ${added ? 'w-[116px] bg-paper text-ink' : 'w-11 bg-ink text-paper hover:w-[116px]' } disabled:cursor-not-allowed disabled:bg-paper/80 disabled:text-ink/50`} aria-label={product.stock <= 0 ? 'المنتج خلص' : `ضيف ${product.name} للسلة`}>
           <AnimatePresence mode="wait" initial={false}>
             {added ? (
-              <motion.span key="added" initial={{ opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 whitespace-nowrap"><Check size={16} /> اتضافت</motion.span>
+              <motion.span key="added" initial={reducedMotion ? false : { opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 whitespace-nowrap"><Check size={16} /> اتضافت</motion.span>
             ) : product.stock <= 0 ? (
-              <motion.span key="sold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="whitespace-nowrap text-xs">خلصت</motion.span>
+              <motion.span key="sold" initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} className="whitespace-nowrap text-xs">خلصت</motion.span>
             ) : (
               <motion.span key="add" className="flex items-center gap-2 whitespace-nowrap"><Plus size={17} /><span className="hidden group-hover:inline">ضيف للسلة</span></motion.span>
             )}
