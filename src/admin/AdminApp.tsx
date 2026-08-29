@@ -37,11 +37,20 @@ export default function AdminApp() {
         return;
       }
 
+      // Authorization (not authentication): the lookup is by the authenticated
+      // user's real auth.id (auth.uid()), never by email text. A login only
+      // succeeds when a public.profiles row for this auth.id has role 'admin'.
       const { data: profile, error } = await client.from('profiles').select('name, role').eq('id', user.id).maybeSingle();
       if (error || profile?.role !== 'admin') {
         await client.auth.signOut();
         if (mounted) {
-          setAuthError('الحساب ده مش مسموح له يدخل لوحة التحكم.');
+          setAuthError(
+            error
+              ? 'في مشكلة مؤقتة في قراءة بيانات الحساب. جرّب تاني كمان شوية.'
+              : profile === null
+                ? 'الحساب مش مترابط بجدول البروفايلات. لازم يكون في صف في public.profiles بـ id نفسه (راجع supabase/ensure-admin-profile.sql).'
+                : 'الحساب ده مش مسموح له يدخل لوحة التحكم.',
+          );
           setSessionUser(null);
           setChecking(false);
         }

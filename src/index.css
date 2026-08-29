@@ -35,9 +35,11 @@ button:disabled { cursor: not-allowed; }
 .has-custom-cursor, .has-custom-cursor a, .has-custom-cursor button { cursor: none; }
 /* The wrapper owns mix-blend-mode: difference so the dot and ring invert against the
    real page background (a z-index'd stacking context on the children would trap the
-   blend). Opaque white -> black on light sections, near-white on ink. */
-.cursor-dot { position: fixed; left: -4px; top: -4px; z-index: 2; width: 8px; height: 8px; border-radius: 999px; background: #fff; will-change: transform; }
-.cursor-ring { position: fixed; left: -18px; top: -18px; z-index: 1; width: 36px; height: 36px; border: 1px solid #fff; border-radius: 999px; will-change: transform; }
+   blend). The wrapper is a 0x0 anchor at the viewport origin so the blended surface
+   is only the two cursor circles, not the whole viewport. Opaque white -> black on
+   light sections, near-white on ink. */
+.cursor-dot { position: absolute; left: -4px; top: -4px; z-index: 2; width: 8px; height: 8px; border-radius: 999px; background: #fff; will-change: transform; }
+.cursor-ring { position: absolute; left: -18px; top: -18px; z-index: 1; width: 36px; height: 36px; border: 1px solid #fff; border-radius: 999px; will-change: transform; }
 
 /* Art-directed hero scaffolding. It is intentionally quieter than a template gradient. */
 .hero-store { isolation: isolate; }

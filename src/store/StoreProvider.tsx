@@ -157,6 +157,30 @@ function toOrderStatus(value: unknown): OrderStatus {
     : 'pending';
 }
 
+/**
+ * Extracts the { error: '<reason>' } message the create-order function returns
+ * on failure (from the parsed body or the raw error response). Returns null for
+ * transport-level failures (network / CORS / relay) where no server reason exists.
+ */
+export async function readFunctionErrorMessage(response: Response | undefined, data: unknown): Promise<string | null> {
+  const fromBody = (body: unknown): string | null => {
+    if (body && typeof body === 'object' && typeof (body as Record<string, unknown>).error === 'string') {
+      return (body as Record<string, unknown>).error as string;
+    }
+    return null;
+  };
+  const fromData = fromBody(data);
+  if (fromData) return fromData;
+  if (response) {
+    try {
+      return fromBody(await response.clone().json());
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 function mapRemoteOrder(data: unknown, cartItems: CartItem[], settings: StoreSettings, checkout?: CheckoutPayload): OrderRecord {
   const record = getResponseRecord(data);
   const fallbackItems = cartItems.map((item) => ({
@@ -405,8 +429,15 @@ export function StoreProvider({ children }: PropsWithChildren) {
         const body = new FormData();
         body.append('order', JSON.stringify(orderPayload));
         body.append('proof', payload.paymentProof);
-        const { data, error } = await client.functions.invoke('create-order', { body });
-        if (error) throw new Error('حصلت مشكلة وإحنا بنبعت إثبات التحويل. جرّب تاني.');
+        const { data, error, response } = await client.functions.invoke('create-order', { body });
+        if (error || data == null || typeof data !== 'object' || !('order' in (data as Record<string, unknown>))) {
+          // The function answers { order } on success and { error: '<reason>' } on
+          // failure. Surface the real reason — a controlled, customer-safe message
+          // (Arabic RPC validation messages / function configuration messages) — so
+          // the exact failing step is visible in the checkout UI.
+          const serverMessage = await readFunctionErrorMessage(response, data);
+          throw new Error(serverMessage ?? 'حصلت مشكلة وإحنا بنبعت إثبات التحويل. جرّب تاني.');
+        }
         order = mapRemoteOrder(asRecord(data).order ?? data, cartItems, settings, payload);
       } else {
         const subtotal = cartSubtotal;
