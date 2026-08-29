@@ -62,6 +62,10 @@ export default function AdminApp() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!checking && isSupabaseConfigured && !sessionUser && location.pathname !== '/admin/login') navigate('/admin/login');
+  }, [checking, location.pathname, sessionUser]);
+
   if (checking) return <div dir="rtl" className="min-h-screen bg-paper px-5 pt-32"><LoadingBlock label="بنتأكد من الدخول..." /></div>;
   if (!isSupabaseConfigured) return <AdminLogin unavailable />;
   if (!sessionUser) return <AdminLogin error={authError} />;
