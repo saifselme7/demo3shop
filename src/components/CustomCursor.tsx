@@ -62,7 +62,7 @@ export default function CustomCursor() {
   if (!enabled) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[100]" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-0 z-[100] mix-blend-difference" aria-hidden="true">
       <div ref={ringRef} className="cursor-ring" />
       <div ref={dotRef} className="cursor-dot" />
     </div>

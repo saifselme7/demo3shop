@@ -381,7 +381,7 @@ export function StoreProvider({ children }: PropsWithChildren) {
       if (!cartItems.length) throw new Error('السلة فاضية.');
 
       const itemInputs: OrderItemInput[] = cartItems.map((item) => ({
-        productId: item.product.id,
+        product_id: item.product.id,
         quantity: item.quantity,
         size: item.size,
         color: item.color,
