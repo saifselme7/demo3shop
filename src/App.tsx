@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CustomCursor from './components/CustomCursor';
 import PageTransition from './components/PageTransition';
@@ -26,8 +26,14 @@ export default function App() {
 
 function StoreRouter() {
   const location = useLocation();
-  const { loading } = useStore();
+  const { loading, catalogError, isLive, refreshCatalog } = useStore();
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+  const wasAdmin = useRef(false);
+
+  useEffect(() => {
+    if (wasAdmin.current && !isAdmin && isLive) void refreshCatalog();
+    wasAdmin.current = isAdmin;
+  }, [isAdmin, isLive, refreshCatalog]);
 
   useEffect(() => {
     if (location.pathname.startsWith('/admin')) document.title = 'SAIF ADMIN — لوحة التحكم';
@@ -37,7 +43,7 @@ function StoreRouter() {
 
   if (isAdmin) return <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}><AdminApp /></Suspense>;
 
-  return <div className="store-app" dir="rtl"><Preloader ready={!loading} /><CustomCursor /><StoreHeader /><AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence><StoreFooter /><CartDrawer /><Toast /></div>;
+  return <div className="store-app" dir="rtl"><Preloader ready={!loading} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}<AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence><StoreFooter /><CartDrawer /><Toast /></div>;
 }
 
 function PublicRoute({ location }: { location: AppLocation }) {
@@ -51,6 +57,10 @@ function PublicRoute({ location }: { location: AppLocation }) {
   if (path === '/track') return <TrackPage />;
   if (path.startsWith('/success/')) return <SuccessPage orderNumber={path.split('/')[2]} />;
   return <NotFoundPage />;
+}
+
+function CatalogConnectionNotice({ onRetry }: { onRetry: () => Promise<void> }) {
+  return <div role="alert" className="relative z-40 mx-4 mt-24 flex items-center justify-between gap-4 border border-ink/10 bg-paper px-4 py-3 text-xs text-ink/65 shadow-editorial sm:mx-auto sm:max-w-[900px] sm:px-5"><span>في مشكلة مؤقتة في تحديث بيانات المتجر. جرّب تاني كمان شوية.</span><button type="button" onClick={() => void onRetry()} className="shrink-0 font-bold text-ink underline underline-offset-4">حاول تاني</button></div>;
 }
 
 function NotFoundPage() {

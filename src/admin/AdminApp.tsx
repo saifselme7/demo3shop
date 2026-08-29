@@ -37,8 +37,8 @@ export default function AdminApp() {
         return;
       }
 
-      const { data: profile, error } = await client.from('profiles').select('is_admin, full_name').eq('id', user.id).maybeSingle();
-      if (error || !profile?.is_admin) {
+      const { data: profile, error } = await client.from('profiles').select('name, role').eq('id', user.id).maybeSingle();
+      if (error || profile?.role !== 'admin') {
         await client.auth.signOut();
         if (mounted) {
           setAuthError('الحساب ده مش مسموح له يدخل لوحة التحكم.');
@@ -48,7 +48,7 @@ export default function AdminApp() {
         return;
       }
       if (mounted) {
-        setAdminName(profile.full_name || user.email || 'صاحب المتجر');
+        setAdminName(profile.name || user.email || 'صاحب المتجر');
         setSessionUser({ id: user.id, email: user.email });
         setChecking(false);
       }

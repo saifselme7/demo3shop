@@ -526,6 +526,7 @@ export const SEED_SETTINGS: StoreSettings = {
   deliveryFee: 75,
   heroTitle: 'اللبس اللي يشبهك.',
   heroSubtitle: 'قطع أساسية، معمولة بعناية، عشان تعيش معاك أكتر من موسم.',
+  promoText: '',
   storeDescription: 'SAIF STORE براند مصري بيحب القطع الهادية، الخامات المظبوطة، والتفاصيل اللي بتبان مع الوقت.',
   instagramUrl: 'https://www.instagram.com/',
   facebookUrl: 'https://www.facebook.com/',

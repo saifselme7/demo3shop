@@ -1,4 +1,4 @@
-import { ArrowUpLeft, Instagram } from 'lucide-react';
+import { ArrowUpLeft, Facebook, Instagram } from 'lucide-react';
 import { categoryPath } from '../lib/format';
 import Link from './Link';
 import LogoMark from './LogoMark';
@@ -35,8 +35,9 @@ export default function StoreFooter() {
             <p className="eyebrow text-paper/40">خليك قريب</p>
             <p className="mt-5 text-sm leading-7 text-paper/55">تابع الجديد والعروض على صفحاتنا.</p>
             <div className="mt-5 flex gap-3">
-              <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="footer-social"><Instagram size={17} /></a>
-              <a href={settings.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="footer-social font-display text-xs">TK</a>
+              {settings.instagramUrl ? <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="footer-social"><Instagram size={17} /></a> : null}
+              {settings.facebookUrl ? <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="footer-social"><Facebook size={17} /></a> : null}
+              {settings.tiktokUrl ? <a href={settings.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="footer-social font-display text-xs">TK</a> : null}
               {settings.contactPhone ? <a href={`tel:${settings.contactPhone}`} aria-label="اتصل بنا" className="footer-social font-display text-xs"><span className="font-display text-xs">اتصل</span></a> : null}
             </div>
           </div>

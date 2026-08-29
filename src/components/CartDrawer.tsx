@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from './Link';
 import { formatEGP } from '../lib/format';
 import { cartLineLabel, cartLineTotal, useStore } from '../store/StoreProvider';
+import SafeImage from './SafeImage';
 
 export default function CartDrawer() {
   const reducedMotion = useReducedMotion();
@@ -66,7 +67,7 @@ export default function CartDrawer() {
                     {cartItems.map((item) => (
                       <article key={`${item.product.id}-${item.size}-${item.color}`} className="flex gap-3 border-b border-ink/10 pb-5">
                         <Link to={`/product/${item.product.slug}`} onClick={() => setCartOpen(false)} className="h-24 w-20 shrink-0 overflow-hidden bg-fog">
-                          <img src={item.product.images[0]} alt={item.product.name} className="h-full w-full object-cover grayscale" />
+                          <SafeImage src={item.product.images[0]} alt={item.product.name} className="h-full w-full object-cover grayscale" />
                         </Link>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">

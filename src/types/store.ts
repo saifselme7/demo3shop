@@ -49,6 +49,7 @@ export interface StoreSettings {
   deliveryFee: number;
   heroTitle: string;
   heroSubtitle: string;
+  promoText: string;
   storeDescription: string;
   instagramUrl: string;
   facebookUrl: string;

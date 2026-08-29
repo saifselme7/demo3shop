@@ -28,11 +28,11 @@ npm run build
 - `/success/:orderNumber` — order confirmation
 - `/track` — customer-owned order tracking
 
-The admin route is `/admin` and is not linked from the public navigation. It requires a Supabase-authenticated user whose `profiles.is_admin` value is `true`.
+The admin route is `/admin` and is not linked from the public navigation. It requires a Supabase-authenticated user whose `profiles.role` value is `admin`.
 
 ## Supabase
 
-Run [`supabase/schema.sql`](./supabase/schema.sql), then [`supabase/seed.sql`](./supabase/seed.sql). Deployment and first-admin instructions are in [`supabase/README.md`](./supabase/README.md).
+Run [`supabase/schema.sql`](./supabase/schema.sql) in the new project; it contains the full schema, policies, buckets, RPCs, and starter catalog. [`supabase/seed.sql`](./supabase/seed.sql) remains available as a repeatable catalog-only seed. Deployment and first-admin instructions are in [`supabase/README.md`](./supabase/README.md).
 
 The browser only receives the public Supabase key. Order creation validates prices, totals, variants, stock, delivery, and payment method inside a server-side RPC. Screenshots go through the `create-order` Edge Function into the private `payment-proofs` bucket; admins view them through short-lived signed URLs.
 

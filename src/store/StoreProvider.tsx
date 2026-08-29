@@ -2,6 +2,7 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 import { SEED_CATEGORIES, SEED_PRODUCTS, SEED_SETTINGS } from '../data/catalog';
 import { formatEGP, normalizePhone } from '../lib/format';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { resolvePublicMedia } from '../lib/media';
 import { readStorage, writeStorage } from '../lib/storage';
 import type {
   Category,
@@ -66,9 +67,9 @@ function mapCategory(row: UnknownRecord): Category {
     name: String(row.name ?? ''),
     slug: String(row.slug ?? ''),
     description: String(row.description ?? ''),
-    imageUrl: String(row.image_url ?? ''),
+    imageUrl: resolvePublicMedia(String(row.image_url ?? ''), 'store-assets'),
     isActive: Boolean(row.is_active ?? true),
-    displayOrder: Number(row.display_order ?? 0),
+    displayOrder: Number(row.sort_order ?? 0),
   };
 }
 
@@ -81,10 +82,10 @@ function mapProduct(row: UnknownRecord, categoryRows: Category[]): Product {
   const imageRows = Array.isArray(row.product_images) ? row.product_images : [];
   const images = imageRows
     .map((entry) => asRecord(entry))
-    .sort((a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0))
-    .map((entry) => String(entry.image_url ?? ''))
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .map((entry) => resolvePublicMedia(String(entry.image_url ?? ''), 'product-images'))
     .filter(Boolean);
-  const fallbackImage = String(row.image_url ?? '');
+  const fallbackImage = resolvePublicMedia(String(row.image_url ?? ''), 'product-images');
 
   return {
     id: String(row.id ?? ''),
@@ -102,7 +103,7 @@ function mapProduct(row: UnknownRecord, categoryRows: Category[]): Product {
     stock: Number(row.stock ?? 0),
     isActive: Boolean(row.is_active ?? true),
     isFeatured: Boolean(row.is_featured ?? false),
-    displayOrder: Number(row.display_order ?? 0),
+    displayOrder: Number(row.sort_order ?? 0),
     images: images.length ? images : fallbackImage ? [fallbackImage] : [],
   };
 }
@@ -111,7 +112,7 @@ function mapSettings(row: UnknownRecord): StoreSettings {
   return {
     id: String(row.id ?? 'store'),
     storeName: String(row.store_name ?? SEED_SETTINGS.storeName),
-    logoUrl: String(row.logo_url ?? ''),
+    logoUrl: resolvePublicMedia(String(row.logo_url ?? ''), 'store-assets'),
     contactPhone: String(row.contact_phone ?? ''),
     whatsappNumber: String(row.whatsapp_number ?? ''),
     vodafoneCashNumber: String(row.vodafone_cash_number ?? ''),
@@ -119,6 +120,7 @@ function mapSettings(row: UnknownRecord): StoreSettings {
     deliveryFee: Number(row.delivery_fee ?? 0),
     heroTitle: String(row.hero_title ?? SEED_SETTINGS.heroTitle),
     heroSubtitle: String(row.hero_subtitle ?? SEED_SETTINGS.heroSubtitle),
+    promoText: String(row.promo_text ?? SEED_SETTINGS.promoText),
     storeDescription: String(row.store_description ?? SEED_SETTINGS.storeDescription),
     instagramUrl: String(row.instagram_url ?? ''),
     facebookUrl: String(row.facebook_url ?? ''),
@@ -250,26 +252,37 @@ export function StoreProvider({ children }: PropsWithChildren) {
     }
 
     setCatalogError(null);
+    setLoading(true);
     try {
       const [categoryResult, productResult, settingsResult] = await Promise.all([
-        client.from('categories').select('*').order('display_order', { ascending: true }),
+        client.from('categories').select('*').order('sort_order', { ascending: true }),
         client
           .from('products')
-          .select('*, categories(id, name, slug), product_images(id, image_url, display_order)')
-          .order('display_order', { ascending: true }),
+          .select('*, categories(id, name, slug), product_images(id, image_url, sort_order)')
+          .order('sort_order', { ascending: true }),
         client.from('store_settings').select('*').eq('id', 'store').maybeSingle(),
       ]);
 
       if (categoryResult.error) throw categoryResult.error;
       if (productResult.error) throw productResult.error;
+      if (settingsResult.error) throw settingsResult.error;
 
       const remoteCategories = (categoryResult.data ?? []).map((row) => mapCategory(asRecord(row)));
+      const activeCategories = remoteCategories.filter((category) => category.isActive);
+      const activeCategoryIds = new Set(activeCategories.map((category) => category.id));
       const remoteProducts = (productResult.data ?? [])
         .map((row) => mapProduct(asRecord(row), remoteCategories))
-        .filter((product) => product.isActive);
+        .filter((product) => product.isActive && activeCategoryIds.has(product.categoryId));
 
-      if (remoteCategories.length) setCategories(remoteCategories.filter((category) => category.isActive));
-      if (remoteProducts.length) setProducts(remoteProducts);
+      // A successful live query is authoritative, including an intentionally empty catalog.
+      setCategories(activeCategories);
+      setProducts(remoteProducts);
+      const remoteProductsById = new Map(remoteProducts.map((product) => [product.id, product]));
+      setCartItems((current) => current.flatMap((item) => {
+        const liveProduct = remoteProductsById.get(item.product.id);
+        if (!liveProduct || liveProduct.stock <= 0) return [];
+        return [{ ...item, product: liveProduct, quantity: Math.min(item.quantity, liveProduct.stock) }];
+      }));
       if (settingsResult.data) setSettings(mapSettings(asRecord(settingsResult.data)));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذر تحميل بيانات المتجر.';

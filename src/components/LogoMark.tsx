@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { StoreSettings } from '../types/store';
 
 interface LogoMarkProps {
@@ -7,10 +8,13 @@ interface LogoMarkProps {
 }
 
 export default function LogoMark({ settings, light = false, className = '' }: LogoMarkProps) {
+  const [logoFailed, setLogoFailed] = useState(false);
+  useEffect(() => setLogoFailed(false), [settings.logoUrl]);
+
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
-      {settings.logoUrl ? (
-        <img src={settings.logoUrl} alt={settings.storeName} className="h-8 w-auto object-contain" />
+      {settings.logoUrl && !logoFailed ? (
+        <img src={settings.logoUrl} alt={settings.storeName} onError={() => setLogoFailed(true)} className="h-8 w-auto object-contain" />
       ) : (
         <span className="font-display text-2xl font-bold leading-none tracking-[0.08em]">SAIF</span>
       )}
