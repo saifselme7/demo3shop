@@ -337,6 +337,11 @@ insert into storage.buckets (id, name, public) values ('product-images', 'produc
 insert into storage.buckets (id, name, public) values ('store-assets', 'store-assets', true) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('payment-proofs', 'payment-proofs', false) on conflict (id) do update set public = false;
 
+-- payment-proofs stays private. create-order creates a signed upload URL with the
+-- anon INSERT policy below and writes through it, so the anon role deliberately has
+-- NO SELECT policy here: signed uploads do not need RETURNING RLS reads, and the
+-- RPC verifies the object through a SECURITY DEFINER check.
+
 drop policy if exists product_images_storage_admin_insert on storage.objects;
 create policy product_images_storage_admin_insert on storage.objects for insert to authenticated with check (bucket_id = 'product-images' and public.is_admin());
 drop policy if exists product_images_storage_admin_delete on storage.objects;

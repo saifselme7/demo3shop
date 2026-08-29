@@ -157,28 +157,64 @@ function toOrderStatus(value: unknown): OrderStatus {
     : 'pending';
 }
 
-/**
- * Extracts the { error: '<reason>' } message the create-order function returns
- * on failure (from the parsed body or the raw error response). Returns null for
- * transport-level failures (network / CORS / relay) where no server reason exists.
- */
-export async function readFunctionErrorMessage(response: Response | undefined, data: unknown): Promise<string | null> {
-  const fromBody = (body: unknown): string | null => {
-    if (body && typeof body === 'object' && typeof (body as Record<string, unknown>).error === 'string') {
-      return (body as Record<string, unknown>).error as string;
-    }
-    return null;
-  };
-  const fromData = fromBody(data);
-  if (fromData) return fromData;
-  if (response) {
-    try {
-      return fromBody(await response.clone().json());
-    } catch {
-      return null;
+function asErrorRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function messageFromBody(body: unknown): string | null {
+  const record = asErrorRecord(body);
+  if (!record) return null;
+  for (const key of ['error', 'message', 'msg', 'detail']) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  if (Array.isArray(record.details)) {
+    for (const detail of record.details) {
+      const nested = asErrorRecord(detail);
+      if (!nested) continue;
+      for (const key of ['error', 'message', 'msg', 'detail']) {
+        const value = nested[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+      }
     }
   }
   return null;
+}
+
+function statusErrorMessage(status: number | undefined): string | null {
+  if (!status) return null;
+  if (status === 404) return 'دالة إنشاء الطلب غير موجودة (404). تأكد من نشر create-order في Supabase.';
+  if (status === 401 || status === 403) return 'الدالة مش متظبطة للوصول العام. فعّل verify_jwt=false في إعدادات create-order.';
+  if (status >= 500) return `خادم إنشاء الطلب رفض الطلب (${status}).`;
+  return null;
+}
+
+/**
+ * Extracts the real reason from a create-order failure. The function answers
+ * { error: '<reason>' } on failure; Supabase may also return { message/msg } for
+ * relay/not-found/authentication responses. Returns null only when there is no
+ * response or body that can be read, so the caller can keep one safe fallback.
+ */
+export async function readFunctionErrorMessage(response: Response | undefined, data: unknown): Promise<string | null> {
+  const fromData = messageFromBody(data);
+  if (fromData) return fromData;
+  if (!response) return null;
+
+  const status = response.status;
+  try {
+    const clone = response.clone();
+    let parsed: unknown;
+    try {
+      parsed = await clone.json();
+    } catch {
+      const text = (await clone.text() || '').trim().slice(0, 300);
+      if (text && !text.startsWith('<')) return text;
+      return statusErrorMessage(status);
+    }
+    return messageFromBody(parsed) ?? statusErrorMessage(status);
+  } catch {
+    return statusErrorMessage(status);
+  }
 }
 
 function mapRemoteOrder(data: unknown, cartItems: CartItem[], settings: StoreSettings, checkout?: CheckoutPayload): OrderRecord {
