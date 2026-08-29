@@ -250,12 +250,12 @@ set search_path = public
 as $$
 declare
   v_customer_name text := nullif(trim(p_order ->> 'customer_name'), '');
-  v_phone text := regexp_replace(coalesce(p_order ->> 'phone', ''), '[^0-9]', '', 'g');
+  v_phone text := regexp_replace(regexp_replace(coalesce(p_order ->> 'phone', ''), '[^0-9]', '', 'g'), '^20', '');
   v_email text := nullif(trim(p_order ->> 'email'), '');
   v_address text := nullif(trim(p_order ->> 'address'), '');
   v_notes text := nullif(trim(p_order ->> 'notes'), '');
   v_payment_method text := p_order ->> 'payment_method';
-  v_transfer_phone text := regexp_replace(coalesce(p_order ->> 'transfer_phone', ''), '[^0-9]', '', 'g');
+  v_transfer_phone text := regexp_replace(regexp_replace(coalesce(p_order ->> 'transfer_phone', ''), '[^0-9]', '', 'g'), '^20', '');
   v_proof_path text := nullif(trim(p_order ->> 'payment_proof_path'), '');
   v_subtotal integer := 0;
   v_delivery_fee integer := 0;
@@ -314,7 +314,7 @@ set search_path = public
 as $$
 declare
   v_order public.orders%rowtype;
-  v_phone text := regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g');
+  v_phone text := regexp_replace(regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g'), '^20', '');
   v_items jsonb;
 begin
   select * into v_order from public.orders where orders.order_number = upper(trim(p_order_number)) and regexp_replace(orders.phone, '[^0-9]', '', 'g') = v_phone;
