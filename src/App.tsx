@@ -35,6 +35,8 @@ function StoreRouter() {
   // Route content therefore mounts only when the preloader starts its exit
   // hand-off (onRevealStart): the opening sections then reveal visibly and
   // lower sections keep revealing on scroll, exactly as before.
+  // Keep AnimatePresence's default initial behaviour so the first mounted route
+  // does not suppress FadeIn/whileInView start states either.
   const [revealsReady, setRevealsReady] = useState(false);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ function StoreRouter() {
 
   if (isAdmin) return <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}><AdminApp /></Suspense>;
 
-  return <div className="store-app" dir="rtl"><Preloader ready={!loading} onRevealStart={() => setRevealsReady(true)} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}{revealsReady ? <AnimatePresence mode="wait" initial={false}><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence> : <div className="min-h-screen bg-ink" aria-hidden="true" />}<StoreFooter /><CartDrawer /><Toast /></div>;
+  return <div className="store-app" dir="rtl"><Preloader ready={!loading} onRevealStart={() => setRevealsReady(true)} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}{revealsReady ? <AnimatePresence mode="wait"><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence> : <div className="min-h-screen bg-ink" aria-hidden="true" />}<StoreFooter /><CartDrawer /><Toast /></div>;
 }
 
 function PublicRoute({ location }: { location: AppLocation }) {

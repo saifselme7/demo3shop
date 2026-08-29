@@ -19,6 +19,13 @@ interface FormErrors {
   proof?: string;
 }
 
+const PROOF_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/pjpeg']);
+const MAX_PROOF_SIZE = 5 * 1024 * 1024;
+
+function isValidProof(file: File): boolean {
+  return PROOF_MIME_TYPES.has(file.type.toLowerCase()) && file.size <= MAX_PROOF_SIZE;
+}
+
 export default function CheckoutPage() {
   const { cartItems, settings, cartTotal, placeOrder, loading, isLive } = useStore();
   const [customerName, setCustomerName] = useState('');
@@ -46,14 +53,14 @@ export default function CheckoutPage() {
     if (address.trim().length < 10) next.address = 'اكتب العنوان بالتفصيل عشان المندوب يوصلك.';
     if (!isValidEgyptianPhone(transferPhone)) next.transferPhone = 'اكتب الرقم اللي حولت منه.';
     if (!proof) next.proof = 'ارفع صورة التحويل عشان نراجع الطلب.';
-    if (proof && (!proof.type.startsWith('image/') || proof.size > 5 * 1024 * 1024)) next.proof = 'الصورة لازم تكون أقل من ٥ ميجا وبصيغة صورة.';
+    if (proof && !isValidProof(proof)) next.proof = 'الصورة لازم تكون JPG أو PNG أو WEBP وأقل من ٥ ميجا.';
     return next;
   };
 
   const handleFile = (file: File | undefined) => {
     if (!file) return;
-    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
-      setErrors((current) => ({ ...current, proof: 'الصورة لازم تكون أقل من ٥ ميجا وبصيغة صورة.' }));
+    if (!isValidProof(file)) {
+      setErrors((current) => ({ ...current, proof: 'الصورة لازم تكون JPG أو PNG أو WEBP وأقل من ٥ ميجا.' }));
       setProof(null);
       return;
     }
