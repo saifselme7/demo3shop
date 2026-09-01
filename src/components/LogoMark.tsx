@@ -12,14 +12,14 @@ export default function LogoMark({ settings, light = false, className = '' }: Lo
   useEffect(() => setLogoFailed(false), [settings.logoUrl]);
 
   return (
-    <span className={`inline-flex items-center gap-3 ${className}`}>
+    <span className={`inline-flex items-center gap-3 ${light ? 'text-paper' : 'text-ink'} ${className}`}>
       {settings.logoUrl && !logoFailed ? (
         <img src={settings.logoUrl} alt={settings.storeName} onError={() => setLogoFailed(true)} className="h-8 w-auto object-contain" />
       ) : (
-        <span className="font-display text-2xl font-bold leading-none tracking-[0.08em]">SAIF</span>
+        <span className="font-serif text-[1.65rem] font-semibold leading-none tracking-[0.06em]">SAIF</span>
       )}
-      <span className={`h-1.5 w-1.5 rounded-full ${light ? 'bg-paper' : 'bg-ink'}`} aria-hidden="true" />
-      <span className="font-display text-[0.7rem] font-medium tracking-[0.18em]">STORE</span>
+      <span className={`h-1 w-1 ${light ? 'bg-paper' : 'bg-ink'}`} aria-hidden="true" />
+      <span className="font-display text-[0.68rem] font-medium tracking-[0.28em]">STORE</span>
     </span>
   );
 }

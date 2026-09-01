@@ -29,14 +29,6 @@ function StoreRouter() {
   const { loading, catalogError, isLive, refreshCatalog } = useStore();
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   const wasAdmin = useRef(false);
-  // While the preloader covers the page, IntersectionObserver still reports
-  // in-viewport elements as in-view, so every above-the-fold reveal would
-  // finish playing behind the opaque loader and the page would look static.
-  // Route content therefore mounts only when the preloader starts its exit
-  // hand-off (onRevealStart): the opening sections then reveal visibly and
-  // lower sections keep revealing on scroll, exactly as before.
-  // Keep AnimatePresence's default initial behaviour so the first mounted route
-  // does not suppress FadeIn/whileInView start states either.
   const [revealsReady, setRevealsReady] = useState(false);
 
   useEffect(() => {
@@ -47,12 +39,39 @@ function StoreRouter() {
   useEffect(() => {
     if (location.pathname.startsWith('/admin')) document.title = 'SAIF ADMIN — لوحة التحكم';
     else if (location.pathname.startsWith('/product/')) document.title = 'SAIF STORE — تفاصيل القطعة';
-    else document.title = 'SAIF STORE — لبس على مزاجك';
+    else if (location.pathname.startsWith('/checkout')) document.title = 'SAIF STORE — إتمام الطلب';
+    else if (location.pathname.startsWith('/cart')) document.title = 'SAIF STORE — السلة';
+    else document.title = 'SAIF STORE — Wear Your Statement.';
   }, [location.pathname]);
 
-  if (isAdmin) return <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}><AdminApp /></Suspense>;
+  if (isAdmin) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-paper px-5 pt-32 text-center text-ink"><p className="text-sm font-semibold text-ink/55">بنجهز لوحة التحكم...</p></div>}>
+        <AdminApp />
+      </Suspense>
+    );
+  }
 
-  return <div className="store-app" dir="rtl"><Preloader ready={!loading} onRevealStart={() => setRevealsReady(true)} /><CustomCursor /><StoreHeader />{isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}{revealsReady ? <AnimatePresence mode="wait"><PageTransition key={`${location.pathname}${location.search}`}><PublicRoute location={location} /></PageTransition></AnimatePresence> : <div className="min-h-screen bg-ink" aria-hidden="true" />}<StoreFooter /><CartDrawer /><Toast /></div>;
+  return (
+    <div className="store-app" dir="rtl">
+      <Preloader ready={!loading} onRevealStart={() => setRevealsReady(true)} />
+      <CustomCursor />
+      <StoreHeader />
+      {isLive && catalogError ? <CatalogConnectionNotice onRetry={refreshCatalog} /> : null}
+      {revealsReady ? (
+        <AnimatePresence mode="wait">
+          <PageTransition key={`${location.pathname}${location.search}`}>
+            <PublicRoute location={location} />
+          </PageTransition>
+        </AnimatePresence>
+      ) : (
+        <div className="min-h-screen bg-ink" aria-hidden="true" />
+      )}
+      <StoreFooter />
+      <CartDrawer />
+      <Toast />
+    </div>
+  );
 }
 
 function PublicRoute({ location }: { location: AppLocation }) {
@@ -69,9 +88,23 @@ function PublicRoute({ location }: { location: AppLocation }) {
 }
 
 function CatalogConnectionNotice({ onRetry }: { onRetry: () => Promise<void> }) {
-  return <div role="alert" className="relative z-40 mx-4 mt-24 flex items-center justify-between gap-4 border border-ink/10 bg-paper px-4 py-3 text-xs text-ink/65 shadow-editorial sm:mx-auto sm:max-w-[900px] sm:px-5"><span>في مشكلة مؤقتة في تحديث بيانات المتجر. جرّب تاني كمان شوية.</span><button type="button" onClick={() => void onRetry()} className="shrink-0 font-bold text-ink underline underline-offset-4">حاول تاني</button></div>;
+  return (
+    <div role="alert" className="relative z-40 mx-4 mt-24 flex items-center justify-between gap-4 border border-ink/10 bg-paper px-4 py-3 text-xs text-ink/65 shadow-editorial sm:mx-auto sm:max-w-[900px] sm:px-5">
+      <span>في مشكلة مؤقتة في تحديث بيانات المتجر. جرّب تاني كمان شوية.</span>
+      <button type="button" onClick={() => void onRetry()} className="shrink-0 font-bold text-ink underline underline-offset-4">حاول تاني</button>
+    </div>
+  );
 }
 
 function NotFoundPage() {
-  return <main className="flex min-h-[75vh] items-center justify-center bg-paper px-5 pt-32 text-center text-ink"><div><p className="eyebrow text-ink/45">404 / LOST PIECE</p><h1 className="mt-5 text-5xl font-bold tracking-tight">الصفحة دي مش هنا.</h1><p className="mt-3 text-sm text-ink/50">بس ممكن تلاقي حاجة تعجبك في التشكيلة.</p><Link to="/products" className="button-dark mt-8">ارجع للتشكيلة <ArrowLeft size={16} /></Link></div></main>;
+  return (
+    <main className="flex min-h-[75vh] items-center justify-center bg-paper px-5 pt-32 text-center text-ink">
+      <div>
+        <p className="eyebrow text-ink/45">404</p>
+        <h1 className="mt-5 text-5xl font-bold tracking-tight">الصفحة دي مش هنا.</h1>
+        <p className="mt-3 text-sm text-ink/50">بس ممكن تلاقي حاجة تعجبك في المجموعة.</p>
+        <Link to="/products" className="button-dark mt-8">ارجع للمجموعة <ArrowLeft size={16} /></Link>
+      </div>
+    </main>
+  );
 }

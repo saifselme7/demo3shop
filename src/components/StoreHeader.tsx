@@ -2,20 +2,16 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Menu, ShoppingBag, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { categoryPath } from '../lib/format';
+import { fashionNavCategories } from '../lib/storefront';
 import Link from './Link';
 import LogoMark from './LogoMark';
 import { useStore } from '../store/StoreProvider';
-
-const NAV_LINKS = [
-  { label: 'الرئيسية', to: '/' },
-  { label: 'التشكيلة', to: '/products' },
-  { label: 'حكاية SAIF', to: '/#story' },
-];
 
 export default function StoreHeader() {
   const { settings, categories, cartCount, setCartOpen } = useStore();
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const navCategories = fashionNavCategories(categories).slice(0, 6);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -34,38 +30,38 @@ export default function StoreHeader() {
   const close = () => setOpen(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-      <div className="store-header mx-auto flex max-w-[1440px] items-center justify-between gap-5 rounded-full border border-black/10 bg-paper/95 px-4 py-3 text-ink shadow-[0_10px_30px_rgba(17,17,17,0.08)] backdrop-blur-xl sm:px-6">
-        <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="shrink-0">
-          <LogoMark settings={settings} />
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-paper/10 bg-ink/80 text-paper backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8 lg:px-12">
+        <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="shrink-0 text-paper">
+          <LogoMark settings={settings} light />
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex" aria-label="التنقل الرئيسي">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.to} to={link.to} className="header-link text-sm font-semibold text-ink/65 transition-colors hover:text-ink">
-              {link.label}
+        <nav className="hidden items-center gap-6 xl:flex" aria-label="التنقل الرئيسي">
+          <Link to="/" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الرئيسية</Link>
+          <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">تسوق</Link>
+          {navCategories.map((category) => (
+            <Link key={category.id} to={categoryPath(category.slug)} className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">
+              {category.name}
             </Link>
           ))}
-          <span className="h-4 w-px bg-ink/15" aria-hidden="true" />
-          <Link to={categoryPath('hoodies')} className="header-link text-sm font-semibold text-ink/65 transition-colors hover:text-ink">
-            هودي الموسم
-          </Link>
+          <Link to="/products?sort=newest" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الجديد</Link>
+          <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الأكثر مبيعًا</Link>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-ink hover:text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="relative inline-flex h-11 w-11 items-center justify-center text-paper transition-colors hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
             aria-label={`افتح السلة، ${cartCount} منتجات`}
           >
-            <ShoppingBag size={18} strokeWidth={1.7} />
+            <ShoppingBag size={18} strokeWidth={1.6} />
             {cartCount > 0 ? (
               <motion.span
                 key={cartCount}
                 initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1 text-[0.65rem] font-bold text-paper"
+                className="absolute left-1 top-1 flex h-4 min-w-4 items-center justify-center bg-paper px-1 text-[0.6rem] font-bold text-ink"
               >
                 {cartCount > 99 ? '٩٩+' : cartCount}
               </motion.span>
@@ -74,11 +70,11 @@ export default function StoreHeader() {
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-ink text-paper transition-transform active:scale-95 lg:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center text-paper hover:bg-paper/10 xl:hidden"
             aria-label={open ? 'اقفل القائمة' : 'افتح القائمة'}
             aria-expanded={open}
           >
-            {open ? <X size={18} /> : <Menu size={18} />}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
@@ -86,25 +82,26 @@ export default function StoreHeader() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            initial={reducedMotion ? false : { opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
-            transition={reducedMotion ? { duration: 0.01 } : { duration: 0.24, ease: 'easeOut' }}
-            className="mx-auto mt-2 max-w-[1440px] rounded-[28px] border border-black/10 bg-paper p-3 text-ink shadow-editorial lg:hidden"
+            initial={reducedMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            className="fixed inset-0 top-[57px] z-40 bg-ink text-paper xl:hidden"
           >
-            <nav className="flex flex-col" aria-label="قائمة الموبايل">
-              {NAV_LINKS.map((link) => (
-                <Link key={link.to} to={link.to} onClick={close} className="rounded-2xl px-4 py-3.5 text-base font-semibold transition-colors hover:bg-ink/5">
-                  {link.label}
-                </Link>
-              ))}
-              <div className="my-2 h-px bg-ink/10" />
-              {categories.slice(0, 4).map((category) => (
-                <Link key={category.id} to={categoryPath(category.slug)} onClick={close} className="rounded-2xl px-4 py-3 text-sm font-medium text-ink/65 transition-colors hover:bg-ink/5 hover:text-ink">
+            <nav className="flex h-full flex-col overflow-y-auto px-6 py-8" aria-label="قائمة الموبايل">
+              <Link to="/" onClick={close} className="border-b border-paper/10 py-4 text-2xl font-bold">الرئيسية</Link>
+              <Link to="/products" onClick={close} className="border-b border-paper/10 py-4 text-2xl font-bold">تسوق</Link>
+              {navCategories.map((category) => (
+                <Link key={category.id} to={categoryPath(category.slug)} onClick={close} className="border-b border-paper/10 py-4 text-xl font-semibold text-paper/80">
                   {category.name}
                 </Link>
               ))}
-              <button type="button" onClick={() => { setCartOpen(true); close(); }} className="mt-2 flex items-center justify-between rounded-2xl bg-ink px-4 py-3.5 text-sm font-bold text-paper">
+              <Link to="/products" onClick={close} className="border-b border-paper/10 py-4 text-xl font-semibold">الجديد</Link>
+              <Link to="/track" onClick={close} className="py-4 text-base text-paper/55">تتبع طلبك</Link>
+              <button
+                type="button"
+                onClick={() => { setCartOpen(true); close(); }}
+                className="button-light mt-8 w-full justify-between"
+              >
                 <span>افتح السلة</span>
                 <span>{cartCount ? `${cartCount} منتجات` : 'لسه فاضية'}</span>
               </button>
