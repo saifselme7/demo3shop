@@ -71,7 +71,7 @@ export default function StoreHeader() {
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-paper bg-ink text-paper hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper xl:hidden"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center text-paper transition-colors hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper xl:hidden"
               aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
               aria-expanded={open}
               aria-controls="mobile-navigation"
