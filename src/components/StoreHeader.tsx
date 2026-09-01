@@ -30,64 +30,70 @@ export default function StoreHeader() {
   const close = () => setOpen(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 overflow-visible border-b border-paper/10 bg-ink/95 text-paper backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-3 sm:px-8 lg:px-12">
-        <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="min-w-0 text-paper">
-          <LogoMark settings={settings} light />
-        </Link>
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-paper/10 bg-ink/95 text-paper backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-3 sm:px-8 lg:px-12">
+          <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="min-w-0 text-paper">
+            <LogoMark settings={settings} light />
+          </Link>
 
-        <nav className="hidden items-center gap-6 xl:flex" aria-label="التنقل الرئيسي">
-          <Link to="/" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الرئيسية</Link>
-          <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">تسوق</Link>
-          {navCategories.map((category) => (
-            <Link key={category.id} to={categoryPath(category.slug)} className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">
-              {category.name}
-            </Link>
-          ))}
-          <Link to="/products?sort=newest" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الجديد</Link>
-          <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الأكثر مبيعًا</Link>
-        </nav>
+          <nav className="hidden items-center gap-6 xl:flex" aria-label="التنقل الرئيسي">
+            <Link to="/" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الرئيسية</Link>
+            <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">تسوق</Link>
+            {navCategories.map((category) => (
+              <Link key={category.id} to={categoryPath(category.slug)} className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">
+                {category.name}
+              </Link>
+            ))}
+            <Link to="/products?sort=newest" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الجديد</Link>
+            <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الأكثر مبيعًا</Link>
+          </nav>
 
-        <div className="relative z-[1] flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setCartOpen(true)}
-            className="relative inline-flex h-11 w-11 items-center justify-center text-paper transition-colors hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
-            aria-label={`افتح السلة، ${cartCount} منتجات`}
-          >
-            <ShoppingBag size={18} strokeWidth={1.8} />
-            {cartCount > 0 ? (
-              <motion.span
-                key={cartCount}
-                initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="absolute left-1 top-1 flex h-4 min-w-4 items-center justify-center bg-paper px-1 text-[0.6rem] font-bold text-ink"
-              >
-                {cartCount > 99 ? '٩٩+' : cartCount}
-              </motion.span>
-            ) : null}
-          </button>
-          <button
-            type="button"
-            onClick={() => setOpen((value) => !value)}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-paper bg-ink text-paper hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper xl:hidden"
-            aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
-            aria-expanded={open}
-            aria-controls="mobile-navigation"
-          >
-            {open ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
-          </button>
+          <div className="relative z-[1] flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setCartOpen(true)}
+              className="relative inline-flex h-11 w-11 items-center justify-center text-paper transition-colors hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+              aria-label={`افتح السلة، ${cartCount} منتجات`}
+            >
+              <ShoppingBag size={18} strokeWidth={1.8} />
+              {cartCount > 0 ? (
+                <motion.span
+                  key={cartCount}
+                  initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="absolute left-1 top-1 flex h-4 min-w-4 items-center justify-center bg-paper px-1 text-[0.6rem] font-bold text-ink"
+                >
+                  {cartCount > 99 ? '٩٩+' : cartCount}
+                </motion.span>
+              ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-paper bg-ink text-paper hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper xl:hidden"
+              aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
+              aria-expanded={open}
+              aria-controls="mobile-navigation"
+            >
+              {open ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
       <AnimatePresence>
         {open ? (
           <motion.div
             id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="قائمة الموبايل"
             initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
-            className="fixed inset-0 top-[57px] z-40 bg-ink text-paper xl:hidden"
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.01 : 0.2 }}
+            className="fixed inset-0 z-40 bg-ink pt-[57px] text-paper xl:hidden"
           >
             <nav className="flex h-full flex-col overflow-y-auto px-6 py-8" aria-label="قائمة الموبايل">
               <Link to="/" onClick={close} className="border-b border-paper/10 py-4 text-2xl font-bold">الرئيسية</Link>
@@ -111,6 +117,6 @@ export default function StoreHeader() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
