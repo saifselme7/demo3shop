@@ -19,7 +19,7 @@ export default function LogoMark({ settings, light = false, className = '' }: Lo
         <span className="font-serif text-[1.65rem] font-semibold leading-none tracking-[0.06em]">SAIF</span>
       )}
       <span className={`h-1 w-1 ${light ? 'bg-paper' : 'bg-ink'}`} aria-hidden="true" />
-      <span className="font-display text-[0.68rem] font-medium tracking-[0.28em]">STORE</span>
+      <span className="hidden font-display text-[0.68rem] font-medium tracking-[0.28em] min-[380px]:inline">STORE</span>
     </span>
   );
 }

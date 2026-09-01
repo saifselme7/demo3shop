@@ -30,9 +30,9 @@ export default function StoreHeader() {
   const close = () => setOpen(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-paper/10 bg-ink/80 text-paper backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8 lg:px-12">
-        <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="shrink-0 text-paper">
+    <header className="fixed inset-x-0 top-0 z-50 overflow-visible border-b border-paper/10 bg-ink/95 text-paper backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-3 sm:px-8 lg:px-12">
+        <Link to="/" aria-label="SAIF STORE - الرئيسية" onClick={close} className="min-w-0 text-paper">
           <LogoMark settings={settings} light />
         </Link>
 
@@ -48,14 +48,14 @@ export default function StoreHeader() {
           <Link to="/products" className="header-link text-[0.8rem] font-semibold text-paper/70 hover:text-paper">الأكثر مبيعًا</Link>
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="relative z-[1] flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => setCartOpen(true)}
             className="relative inline-flex h-11 w-11 items-center justify-center text-paper transition-colors hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
             aria-label={`افتح السلة، ${cartCount} منتجات`}
           >
-            <ShoppingBag size={18} strokeWidth={1.6} />
+            <ShoppingBag size={18} strokeWidth={1.8} />
             {cartCount > 0 ? (
               <motion.span
                 key={cartCount}
@@ -70,11 +70,12 @@ export default function StoreHeader() {
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex h-11 w-11 items-center justify-center text-paper hover:bg-paper/10 xl:hidden"
-            aria-label={open ? 'اقفل القائمة' : 'افتح القائمة'}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-paper bg-ink text-paper hover:bg-paper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper xl:hidden"
+            aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
             aria-expanded={open}
+            aria-controls="mobile-navigation"
           >
-            {open ? <X size={20} /> : <Menu size={20} />}
+            {open ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
           </button>
         </div>
       </div>
@@ -82,6 +83,7 @@ export default function StoreHeader() {
       <AnimatePresence>
         {open ? (
           <motion.div
+            id="mobile-navigation"
             initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
